@@ -49,9 +49,11 @@ Download and place inside /models folder:
 -Age Model
   Prototxt: https://github.com/spmallick/learnopencv/blob/master/AgeGender/age_deploy.prototxt
   Caffemodel: https://www.dropbox.com/scl/fi/erfljon3f1chfyhbjdvoz/age_net.caffemodel?rlkey=4enbc7j5e138d8unnp8fz95p0&e=1&dl=0
+
 -Gender Model
   Prototxt: https://github.com/spmallick/learnopencv/blob/master/AgeGender/gender_deploy.prototxt
   Caffemodel:https://www.dropbox.com/scl/fi/j7gcbj1l3ur6r8jdf3k7k/gender_net.caffemodel?rlkey=g7us6rvnw8ji7z64d5zy002h4&e=1&dl=0
+
 Haarcascade (OpenCV)
 Eye: https://github.com/opencv/opencv/blob/master/data/haarcascades/haarcascade_eye.xml
 Smile: https://github.com/opencv/opencv/blob/master/data/haarcascades/haarcascade_smile.xml
