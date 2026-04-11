@@ -1,77 +1,123 @@
 from flask import Flask, render_template, Response, jsonify, request
 import cv2
-import numpy as np
 import random
-import time
 import mediapipe as mp
 import os
+import numpy as np
+from collections import defaultdict
 
 app = Flask(__name__)
 
 UPLOAD_FOLDER = "static/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Load models
-age_net = cv2.dnn.readNetFromCaffe('age_deploy.prototxt','age_net.caffemodel')
-gender_net = cv2.dnn.readNetFromCaffe('gender_deploy.prototxt','gender_net.caffemodel')
+# ================== LOAD MODELS ==================
+
+age_net = cv2.dnn.readNetFromCaffe(
+    r'C:\Users\samrah\OneDrive\Desktop\AI facial & health insight\models\age_deploy.prototxt',
+    r'C:\Users\samrah\OneDrive\Desktop\AI facial & health insight\models\age_net.caffemodel'
+)
+
+gender_net = cv2.dnn.readNetFromCaffe(
+    r'C:\Users\samrah\OneDrive\Desktop\AI facial & health insight\models\gender_deploy.prototxt',
+    r'C:\Users\samrah\OneDrive\Desktop\AI facial & health insight\models\gender_net.caffemodel'
+)
+
+smile_cascade = cv2.CascadeClassifier(
+    r'C:\Users\samrah\OneDrive\Desktop\AI facial & health insight\models\haarcascade_smile.xml'
+)
+
+print("Age net loaded:", age_net.empty())
+print("Gender net loaded:", gender_net.empty())
 
 age_list = ['(0-2)', '(4-6)', '(8-12)', '(15-20)',
             '(25-32)', '(38-43)', '(48-53)', '(60-100)']
 
 gender_list = ['Male', 'Female']
-emotions = ["Happy", "Sad", "Stressed", "Neutral"]
 
-# MediaPipe
+# ================== MEDIAPIPE ==================
+
 mp_face = mp.solutions.face_detection
 face_detection = mp_face.FaceDetection(min_detection_confidence=0.6)
 
-# Global state
-last_prediction_time = 0
-prediction_interval = 6  # 🔥 Increased stability
+# ================== GLOBAL STATE ==================
 
-current_gender = ""
-current_age = ""
-current_emotion = ""
-current_advice = "Waiting for detection..."
+current_results = []
+emotion_count = defaultdict(int)
 
-history = []
+last_gender = None
+last_age = None
 
-def get_health_advice(age, emotion):
-    if emotion == "Stressed":
-        return "Stress detected. Take breaks and relax."
-    elif emotion == "Sad":
-        return "Low mood detected. Talk to friends and rest."
-    elif emotion == "Happy":
-        return "Positive mood. Maintain your lifestyle."
+# ================== EMOTION ==================
+
+def detect_emotion(face):
+    gray = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
+
+    smiles = smile_cascade.detectMultiScale(gray, 1.7, 20)
+
+    h, w = gray.shape
+    mouth = gray[int(h*0.6):h, int(w*0.2):int(w*0.8)]
+    variance = np.var(mouth)
+
+    if len(smiles) > 0:
+        return "Happy", 90
+    elif variance < 180:
+        return "Sad", 80
+    elif variance > 400:
+        return "Stressed", 82
     else:
-        return "Stay healthy with proper diet and exercise."
+        return "Neutral", 75
+
+# ================== AI RESPONSE ==================
+
+def generate_ai_advice(age, emotion, confidence):
+    if emotion == "Happy":
+        return f"You seem happy ({confidence:.1f}%). Keep smiling 😊"
+    elif emotion == "Sad":
+        return f"You look low ({confidence:.1f}%). Try relaxing."
+    elif emotion == "Stressed":
+        return f"Stress detected ({confidence:.1f}%). Take a break."
+    else:
+        return f"You appear calm ({confidence:.1f}%). Stay focused."
+
+# ================== PROCESS FACE ==================
 
 def process_face(face):
-    global current_emotion
+    global last_gender, last_age
 
-    blob = cv2.dnn.blobFromImage(face, 1.0, (227,227),
-                                 (78.426,87.768,114.895))
+    if face is None or face.size == 0:
+        return "Unknown", "Unknown", "Neutral", 0, "", ""
 
-    # Gender
-    gender_net.setInput(blob)
-    gender = gender_list[gender_net.forward().argmax()]
+    try:
+        face = cv2.resize(face, (227, 227))
+        blob = cv2.dnn.blobFromImage(face, 1.0, (227,227),
+                                     (78.426,87.768,114.895))
 
-    # Age
-    age_net.setInput(blob)
-    age = age_list[age_net.forward().argmax()]
+        # Gender
+        gender_net.setInput(blob)
+        gender_pred = gender_list[gender_net.forward().argmax()]
+        gender = last_gender if last_gender else gender_pred
+        last_gender = gender
 
-    # 🔥 Emotion stabilization
-    if current_emotion == "":
-        emotion = random.choice(emotions)
-    else:
-        emotion = current_emotion
+        # Age
+        age_net.setInput(blob)
+        age_pred = age_list[age_net.forward().argmax()]
+        age = last_age if last_age else age_pred
+        last_age = age
 
-    advice = get_health_advice(age, emotion)
+    except Exception as e:
+        print("Model error:", e)
+        return "Unknown", "Unknown", "Neutral", 0, "", ""
 
-    return gender, age, emotion, advice
+    emotion, confidence = detect_emotion(face)
+    advice = generate_ai_advice(age, emotion, confidence)
+
+    return gender, age, emotion, confidence, advice, ""
+
+# ================== VIDEO ==================
 
 def generate_frames():
-    global last_prediction_time, current_gender, current_age, current_emotion, current_advice
+    global current_results
 
     cap = cv2.VideoCapture(0)
 
@@ -80,50 +126,49 @@ def generate_frames():
         if not success:
             break
 
-        # Brightness fix
-        frame = cv2.convertScaleAbs(frame, alpha=1.5, beta=40)
+        frame = cv2.convertScaleAbs(frame, alpha=1.2, beta=20)
 
         h, w, _ = frame.shape
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         results = face_detection.process(rgb)
+        face_results = []
 
         if results.detections:
-            for detection in results.detections:
+            for i, detection in enumerate(results.detections):
+
                 bbox = detection.location_data.relative_bounding_box
 
-                x = int(bbox.xmin * w)
-                y = int(bbox.ymin * h)
+                x = max(0, int(bbox.xmin * w))
+                y = max(0, int(bbox.ymin * h))
                 bw = int(bbox.width * w)
                 bh = int(bbox.height * h)
 
+                if bw < 80 or bh < 80:
+                    continue
+
                 face = frame[y:y+bh, x:x+bw]
 
-                current_time = time.time()
+                gender, age, emotion, confidence, advice, _ = process_face(face)
 
-                if face.size > 0 and current_time - last_prediction_time > prediction_interval:
-
-                    gender, age, emotion, advice = process_face(face)
-
-                    current_gender = gender
-                    current_age = age
-                    current_emotion = emotion
-                    current_advice = advice
-
-                    history.append({
-                        "gender": gender,
-                        "age": age,
-                        "emotion": emotion
-                    })
-
-                    last_prediction_time = current_time
+                face_results.append({
+                    "id": f"Person {i+1}",
+                    "gender": gender,
+                    "age": age,
+                    "emotion": emotion,
+                    "confidence": confidence,
+                    "advice": advice
+                })
 
                 cv2.rectangle(frame, (x,y),(x+bw,y+bh),(0,255,0),2)
 
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
+        if face_results:
+            current_results = face_results
 
-        yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        ret, buffer = cv2.imencode('.jpg', frame)
+        yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+
+# ================== ROUTES ==================
 
 @app.route('/')
 def index():
@@ -136,58 +181,45 @@ def video():
 
 @app.route('/results')
 def results():
-    return jsonify({
-        "gender": current_gender,
-        "age": current_age,
-        "emotion": current_emotion,
-        "advice": current_advice
-    })
-
-@app.route('/history')
-def get_history():
-    return jsonify(history[-5:])
+    return jsonify(current_results)
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    global current_gender, current_age, current_emotion, current_advice
+    global current_results
 
     file = request.files['image']
-    filepath = os.path.join(UPLOAD_FOLDER, file.filename)
-    file.save(filepath)
+    path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(path)
 
-    image = cv2.imread(filepath)
-    image = cv2.convertScaleAbs(image, alpha=1.5, beta=40)
-
-    h, w, _ = image.shape
+    image = cv2.imread(path)
     rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     results = face_detection.process(rgb)
+    face_results = []
 
     if results.detections:
-        for detection in results.detections:
+        for i, detection in enumerate(results.detections):
             bbox = detection.location_data.relative_bounding_box
 
-            x = int(bbox.xmin * w)
-            y = int(bbox.ymin * h)
-            bw = int(bbox.width * w)
-            bh = int(bbox.height * h)
+            x = int(bbox.xmin * image.shape[1])
+            y = int(bbox.ymin * image.shape[0])
+            w = int(bbox.width * image.shape[1])
+            h = int(bbox.height * image.shape[0])
 
-            face = image[y:y+bh, x:x+bw]
+            face = image[y:y+h, x:x+w]
 
-            if face.size > 0:
-                gender, age, emotion, advice = process_face(face)
+            gender, age, emotion, confidence, advice, _ = process_face(face)
 
-                current_gender = gender
-                current_age = age
-                current_emotion = emotion
-                current_advice = advice
+            face_results.append({
+                "id": f"Person {i+1}",
+                "gender": gender,
+                "age": age,
+                "emotion": emotion,
+                "confidence": confidence,
+                "advice": advice
+            })
 
-                history.append({
-                    "gender": gender,
-                    "age": age,
-                    "emotion": emotion
-                })
-
+    current_results = face_results
     return "OK"
 
 if __name__ == "__main__":

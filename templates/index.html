@@ -146,31 +146,50 @@ input, button {
 
 </div>
 
-<script>
-// LIVE RESULTS
-setInterval(()=>{
-fetch('/results')
-.then(res=>res.json())
-.then(data=>{
-document.getElementById("gender").innerText=data.gender || "--";
-document.getElementById("age").innerText=data.age || "--";
-document.getElementById("emotion").innerText=data.emotion || "--";
-document.getElementById("advice").innerText=data.advice || "--";
-});
-},2000);
+<<script>
+// FIXED RESULTS
+setInterval(async ()=>{
+    const res = await fetch('/results');
+    const data = await res.json();
 
-// UPLOAD IMAGE
+    if(data.length > 0){
+        const p = data[0]; // show first person
+
+        document.getElementById("gender").innerText = p.gender || "--";
+        document.getElementById("age").innerText = p.age || "--";
+        document.getElementById("emotion").innerText = p.emotion || "--";
+        document.getElementById("advice").innerText = p.advice || "--";
+    }
+},1000);
+
+// UPLOAD
 function upload(){
-let file=document.getElementById('file').files[0];
-if(!file) return;
+    let file = document.getElementById('file').files[0];
+    if(!file) return;
 
-let form=new FormData();
-form.append('image',file);
+    let form = new FormData();
+    form.append('image', file);
 
-fetch('/upload',{
-method:'POST',
-body:form
-});
+    fetch('/upload',{
+        method:'POST',
+        body:form
+    }).then(()=>{
+        // 🔥 force update results after upload
+        setTimeout(()=>{
+            fetch('/results')
+            .then(res=>res.json())
+            .then(data=>{
+                if(data.length > 0){
+                    const p = data[0];
+
+                    document.getElementById("gender").innerText = p.gender || "--";
+                    document.getElementById("age").innerText = p.age || "--";
+                    document.getElementById("emotion").innerText = p.emotion || "--";
+                    document.getElementById("advice").innerText = p.advice || "--";
+                }
+            });
+        }, 500);
+    });
 }
 
 // HISTORY
@@ -184,7 +203,7 @@ html+=`<p>${i.gender} ${i.age} (${i.emotion})</p>`;
 });
 document.getElementById("history").innerHTML=html;
 });
-},3000);
+},2000);
 </script>
 
 </body>
