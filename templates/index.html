@@ -12,49 +12,60 @@ body {
     font-family: 'Poppins', sans-serif;
     background: linear-gradient(135deg, #1e1e2f, #121212);
     color: white;
-    text-align: center;
 }
 
+/* HEADER */
 h1 {
+    text-align: center;
     margin-top: 20px;
 }
 
 .subtitle {
+    text-align: center;
     color: #aaa;
-    margin-top: -10px;
 }
 
+/* MAIN LAYOUT */
 .container {
     display: flex;
-    justify-content: center;
     gap: 20px;
-    margin-top: 20px;
-    flex-wrap: wrap;
+    padding: 20px;
 }
 
-.video-box {
-    width: 640px;
+/* LEFT PANEL */
+.left-panel {
+    width: 20%;
+}
+
+/* CENTER PANEL */
+.center-panel {
+    width: 50%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
 }
 
 .video-feed {
     width: 100%;
     aspect-ratio: 4/3;
-    object-fit: cover;
     border-radius: 20px;
     box-shadow: 0 0 25px rgba(0,255,150,0.3);
 }
 
+/* RIGHT PANEL */
 .right-panel {
-    max-width: 260px;
+    width: 30%;
 }
 
+/* CARDS */
 .card {
     background: rgba(255,255,255,0.08);
-    padding: 10px;
-    margin-bottom: 10px;
+    padding: 12px;
+    margin-bottom: 12px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0,255,150,0.2);
-    text-align: left;
     transition: 0.3s;
 }
 
@@ -63,13 +74,13 @@ h1 {
 }
 
 .card h3 {
-    margin: 0 0 5px 0;
-    font-size: 16px;
+    margin: 0 0 6px 0;
+    font-size: 15px;
 }
 
 .card p {
-     font-size: 13px;
-     margin: 2px 0;
+    font-size: 13px;
+    margin: 3px 0;
 }
 
 .result span {
@@ -77,87 +88,119 @@ h1 {
     font-weight: bold;
 }
 
-input, button {
-    margin-top: 5px;
+/* HISTORY SCROLL FIX */
+.history-box {
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+/* BUTTONS */
+button {
+    width: 100%;
+    margin-top: 6px;
+    padding: 6px;
+    border-radius: 6px;
+    border: none;
+    background: #00ffcc;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #00ccaa;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🚀 AI Driven Facial Recognition & Health Analysis</h1>
+<h1> AI Driven Facial Recognition & Health Analysis</h1>
 <p class="subtitle">Real-time AI system with webcam + image analysis</p>
 
 <div class="container">
 
-<!-- LEFT SIDE -->
-<div class="video-box">
-<p style="color:#00ffcc;">📷 Live Camera Feed</p>
-<img src="/video" class="video-feed">
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
+
+        <div class="card">
+            <h3>🧠 Face Detection</h3>
+            <p>MediaPipe real-time detection</p>
+        </div>
+
+        <div class="card">
+            <h3>👤 Age & Gender</h3>
+            <p>Caffe deep learning models</p>
+        </div>
+
+        <div class="card">
+            <h3>😊 Emotion Analysis</h3>
+            <p>Lightweight real-time estimation</p>
+        </div>
+
+        <div class="card">
+            <h3>⚡ Real-Time System</h3>
+            <p>Optimized for CPU performance</p>
+        </div>
+
+    </div>
+
+    <!-- CENTER PANEL -->
+    <div class="center-panel">
+        <p style="color:#00ffcc;">📷 Live Camera Feed</p>
+        <img src="/video" class="video-feed">
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+
+        <!-- RESULTS -->
+        <div class="card result">
+    <h3>📊 Results</h3>
+    <p>Users: <span id="users">0</span></p>
+    <p>Gender: <span id="gender">--</span></p>
+    <p>Age: <span id="age">--</span></p>
+    <p>Emotion: <span id="emotion">--</span></p>
+    <p>Confidence: <span id="confidence">--</span></p>
+    <p>Advice: <span id="advice">--</span></p>
+     </div>
+
+        <!-- SUMMARY BUTTONS -->
+        <div class="card">
+            <h3>📈 Session</h3>
+            <a href="/summary"><button>View Summary</button></a>
+            <a href="/reset"><button>Reset Session</button></a>
+        </div>
+
+        <!-- UPLOAD -->
+        <div class="card">
+            <h3>📤 Upload Image</h3>
+            <input type="file" id="file">
+            <button onclick="upload()">Analyze</button>
+        </div>
+
+        <!-- HISTORY -->
+        <div class="card">
+            <h3>🕘 History</h3>
+            <div id="history" class="history-box"></div>
+        </div>
+
+    </div>
+
 </div>
 
-<!-- RIGHT PANEL -->
-<div class="right-panel">
-
-<!-- FEATURES -->
-<div class="card">
-    <h3>🧠 Face Detection</h3>
-    <p>MediaPipe real-time detection</p>
-</div>
-
-<div class="card">
-    <h3>👤 Age & Gender</h3>
-    <p>Caffe deep learning models</p>
-</div>
-
-<div class="card">
-    <h3>😊 Emotion Analysis</h3>
-    <p>Real-time facial estimation</p>
-</div>
-
-<div class="card">
-    <h3>⚡ Real-Time System</h3>
-    <p>Optimized for performance</p>
-</div>
-
-<!-- RESULTS -->
-<div class="card result">
-<h3>📊 Results</h3>
-<p>Gender: <span id="gender">--</span></p>
-<p>Age: <span id="age">--</span></p>
-<p>Emotion: <span id="emotion">--</span></p>
-<p>Advice: <span id="advice">--</span></p>
-</div>
-
-<!-- UPLOAD -->
-<div class="card">
-<h3>📤 Upload Image</h3>
-<input type="file" id="file">
-<button onclick="upload()">Analyze</button>
-</div>
-
-<!-- HISTORY -->
-<div class="card">
-<h3>🕘 History</h3>
-<div id="history"></div>
-</div>
-
-</div>
-
-</div>
-
-<<script>
-// FIXED RESULTS
+<script>
+// RESULTS
 setInterval(async ()=>{
     const res = await fetch('/results');
     const data = await res.json();
 
     if(data.length > 0){
-        const p = data[0]; // show first person
+        const p = data[0];  // 🔥 back to single user
 
+        document.getElementById("users").innerText = data.length;
         document.getElementById("gender").innerText = p.gender || "--";
         document.getElementById("age").innerText = p.age || "--";
         document.getElementById("emotion").innerText = p.emotion || "--";
+        document.getElementById("confidence").innerText = p.confidence ? p.confidence + "%" : "--";
         document.getElementById("advice").innerText = p.advice || "--";
     }
 },1000);
@@ -174,7 +217,6 @@ function upload(){
         method:'POST',
         body:form
     }).then(()=>{
-        // 🔥 force update results after upload
         setTimeout(()=>{
             fetch('/results')
             .then(res=>res.json())
@@ -182,9 +224,11 @@ function upload(){
                 if(data.length > 0){
                     const p = data[0];
 
+                    document.getElementById("users").innerText = data.length;
                     document.getElementById("gender").innerText = p.gender || "--";
                     document.getElementById("age").innerText = p.age || "--";
                     document.getElementById("emotion").innerText = p.emotion || "--";
+                    document.getElementById("confidence").innerText = p.confidence + "%";
                     document.getElementById("advice").innerText = p.advice || "--";
                 }
             });
@@ -193,17 +237,21 @@ function upload(){
 }
 
 // HISTORY
+/*
 setInterval(()=>{
 fetch('/history')
 .then(res=>res.json())
 .then(data=>{
 let html="";
-data.forEach(i=>{
+data.slice(-10).forEach(i=>{
 html+=`<p>${i.gender} ${i.age} (${i.emotion})</p>`;
 });
 document.getElementById("history").innerHTML=html;
 });
 },2000);
+*/
+
+
 </script>
 
 </body>
