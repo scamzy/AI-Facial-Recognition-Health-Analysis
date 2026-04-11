@@ -2,99 +2,68 @@
 
 ## 📌 Overview
 
-This project is a real-time AI-based system that performs facial detection and basic health analysis using computer vision and deep learning.
-It detects faces via webcam or uploaded images, predicts age and gender, estimates emotion, and provides simple health insights through a web interface.
+This project is a real-time AI-based system that performs facial detection and basic health analysis using computer vision.
+
+It detects faces via webcam or uploaded images, predicts age and gender using deep learning models, estimates emotion, and provides simple AI-based health advice.
 
 ---
 
 ## 🎯 Features
 
-* 📷 Real-time face detection using MediaPipe
-* 👤 Age & Gender prediction using Caffe models
-* 😊 Emotion analysis (lightweight logic)
-* 💡 Health advice generation
-* 🌐 Flask-based web application
-* 📤 Image upload support
-* 🕘 History tracking
+- 📷 Real-time face detection (OpenCV)
+- 👤 Age & Gender prediction (Caffe models)
+- 😊 Emotion detection (smile + eye based logic)
+- 💡 AI-like health advice
+- 📊 Session summary (emotion tracking)
+- 📤 Image upload support
+- 🌐 Flask web interface
 
 ---
 
-## 🛠️ Technologies Used
+## 🛠️ Tech Stack
 
-* Python
-* OpenCV
-* MediaPipe
-* Flask
-* Caffe (Deep Learning Models)
+- Python  
+- OpenCV  
+- Flask  
+- NumPy  
+- Caffe (Pre-trained models)
 
 ---
 
-## ⚙️ Setup & Implementation Steps
+## ⚙️ Setup & Run
 
-### 1️⃣ Clone the Repository
-
+### 1️⃣ Clone the repo
 ```bash
 git clone https://github.com/scamzy/AI-Facial-Recognition-Health-Analysis.git
-cd ai-facial-Recognition-Health-Analysis
+cd AI-Facial-Recognition-Health-Analysis
 ```
-
----
-
-### 2️⃣ Install Dependencies
-
+### 2️⃣ Install dependencies
 ```bash
-pip install opencv-python mediapipe flask numpy
+pip install opencv-python flask numpy
 ```
 
----
+### 3️⃣ Add model files (IMPORTANT)
 
-### 3️⃣ Download Required Models
+Download and place inside /models folder:
 
-Download the following Caffe model files and place them in the project folder:
+-Age Model
+  Prototxt: https://github.com/spmallick/learnopencv/blob/master/AgeGender/age_deploy.prototxt
+  Caffemodel: https://www.dropbox.com/scl/fi/erfljon3f1chfyhbjdvoz/age_net.caffemodel?rlkey=4enbc7j5e138d8unnp8fz95p0&e=1&dl=0
+-Gender Model
+  Prototxt: https://github.com/spmallick/learnopencv/blob/master/AgeGender/gender_deploy.prototxt
+  Caffemodel:https://www.dropbox.com/scl/fi/j7gcbj1l3ur6r8jdf3k7k/gender_net.caffemodel?rlkey=g7us6rvnw8ji7z64d5zy002h4&e=1&dl=0
+Haarcascade (OpenCV)
+Eye: https://github.com/opencv/opencv/blob/master/data/haarcascades/haarcascade_eye.xml
+Smile: https://github.com/opencv/opencv/blob/master/data/haarcascades/haarcascade_smile.xml
 
-* age_deploy.prototxt
-* age_net.caffemodel
-* gender_deploy.prototxt
-* gender_net.caffemodel
-
-👉 Add your download links here:
-
-* Age Model: https://www.dropbox.com/s/xfb20y596869vbb/age_net.caffemodel?dl=0
-* Gender Model: https://www.dropbox.com/s/iyv483wz7ztr9gh/gender_net.caffemodel?dl=0
-
----
-
-### 4️⃣ Run the Application
-
+### 4️⃣ Run the app
 ```bash
 python app.py
 ```
 
----
-
-### 5️⃣ Open in Browser
-
+### 5️⃣ Open in browser
+```bash
 http://127.0.0.1:5000
-
----
-
-## ⚠️ Limitations
-
-* Accuracy depends on lighting conditions
-* Age prediction is approximate
-* Emotion detection is simulated
-
----
-
-## 🔮 Future Enhancements
-
-* LLM integration (Gemini / GPT)
-* Improved emotion detection
-* Database for storing history
-
----
-
-## 👨‍💻 Author
-
-**Samrah Inayathulla**
-Final Year BE Project
+```
+## 3️⃣ Add model files (IMPORTANT)
+Samrah Inayathulla
