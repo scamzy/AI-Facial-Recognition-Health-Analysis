@@ -61,6 +61,7 @@ Download and place inside /models folder:
 Haarcascade (OpenCV)
 
 Eye: https://github.com/opencv/opencv/blob/master/data/haarcascades/haarcascade_eye.xml
+
 Smile: https://github.com/opencv/opencv/blob/master/data/haarcascades/haarcascade_smile.xml
 
 ### 4️⃣ Run the app
