@@ -14,7 +14,6 @@ body {
     color: white;
 }
 
-/* HEADER */
 h1 {
     text-align: center;
     margin-top: 20px;
@@ -25,27 +24,15 @@ h1 {
     color: #aaa;
 }
 
-/* MAIN LAYOUT */
 .container {
     display: flex;
     gap: 20px;
     padding: 20px;
 }
 
-/* LEFT PANEL */
-.left-panel {
-    width: 20%;
-}
-
-/* CENTER PANEL */
-.center-panel {
-    width: 50%;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-}
+.left-panel { width: 20%; }
+.center-panel { width: 50%; text-align: center; }
+.right-panel { width: 30%; }
 
 .video-feed {
     width: 100%;
@@ -54,12 +41,6 @@ h1 {
     box-shadow: 0 0 25px rgba(0,255,150,0.3);
 }
 
-/* RIGHT PANEL */
-.right-panel {
-    width: 30%;
-}
-
-/* CARDS */
 .card {
     background: rgba(255,255,255,0.08);
     padding: 12px;
@@ -69,9 +50,7 @@ h1 {
     transition: 0.3s;
 }
 
-.card:hover {
-    transform: scale(1.03);
-}
+.card:hover { transform: scale(1.03); }
 
 .card h3 {
     margin: 0 0 6px 0;
@@ -88,13 +67,11 @@ h1 {
     font-weight: bold;
 }
 
-/* HISTORY SCROLL FIX */
 .history-box {
     max-height: 150px;
     overflow-y: auto;
 }
 
-/* BUTTONS */
 button {
     width: 100%;
     margin-top: 6px;
@@ -120,27 +97,10 @@ button:hover {
 
     <!-- LEFT PANEL -->
     <div class="left-panel">
-
-        <div class="card">
-            <h3>🧠 Face Detection</h3>
-            <p>MediaPipe real-time detection</p>
-        </div>
-
-        <div class="card">
-            <h3>👤 Age & Gender</h3>
-            <p>Caffe deep learning models</p>
-        </div>
-
-        <div class="card">
-            <h3>😊 Emotion Analysis</h3>
-            <p>Lightweight real-time estimation</p>
-        </div>
-
-        <div class="card">
-            <h3>⚡ Real-Time System</h3>
-            <p>Optimized for CPU performance</p>
-        </div>
-
+        <div class="card"><h3>🧠 Face Detection</h3><p>Real-time Haar Cascade</p></div>
+        <div class="card"><h3>👤 Age & Gender</h3><p>Caffe deep learning models</p></div>
+        <div class="card"><h3>😊 Emotion Analysis</h3><p>Heuristic + AI-based estimation</p></div>
+        <div class="card"><h3>⚡ Real-Time System</h3><p>Optimized for CPU performance</p></div>
     </div>
 
     <!-- CENTER PANEL -->
@@ -154,16 +114,17 @@ button:hover {
 
         <!-- RESULTS -->
         <div class="card result">
-    <h3>📊 Results</h3>
-    <p>Users: <span id="users">0</span></p>
-    <p>Gender: <span id="gender">--</span></p>
-    <p>Age: <span id="age">--</span></p>
-    <p>Emotion: <span id="emotion">--</span></p>
-    <p>Confidence: <span id="confidence">--</span></p>
-    <p>Advice: <span id="advice">--</span></p>
-     </div>
+            <h3>📊 Results</h3>
+            <p>Users: <span id="users">0</span></p>
+            <p>Gender: <span id="gender">--</span></p>
+            <p>Age: <span id="age">--</span></p>
+            <p>Emotion: <span id="emotion">--</span></p>
+            <p>Confidence: <span id="confidence">--</span></p>
+            <p>Advice: <span id="advice">--</span></p>
+            <p>Reason: <span id="reason">--</span></p>
+        </div>
 
-        <!-- SUMMARY BUTTONS -->
+        <!-- SESSION -->
         <div class="card">
             <h3>📈 Session</h3>
             <a href="/summary"><button>View Summary</button></a>
@@ -188,13 +149,14 @@ button:hover {
 </div>
 
 <script>
-// RESULTS
+
+// LIVE RESULTS
 setInterval(async ()=>{
     const res = await fetch('/results');
     const data = await res.json();
 
     if(data.length > 0){
-        const p = data[0];  // 🔥 back to single user
+        const p = data[0];
 
         document.getElementById("users").innerText = data.length;
         document.getElementById("gender").innerText = p.gender || "--";
@@ -202,13 +164,19 @@ setInterval(async ()=>{
         document.getElementById("emotion").innerText = p.emotion || "--";
         document.getElementById("confidence").innerText = p.confidence ? p.confidence + "%" : "--";
         document.getElementById("advice").innerText = p.advice || "--";
+        document.getElementById("reason").innerText = p.reason || "--";
     }
 },1000);
 
-// UPLOAD
+
+// ✅ PROFESSIONAL UPLOAD FUNCTION
 function upload(){
     let file = document.getElementById('file').files[0];
-    if(!file) return;
+
+    if(!file){
+        alert("Please select an image first");
+        return;
+    }
 
     let form = new FormData();
     form.append('image', file);
@@ -216,7 +184,15 @@ function upload(){
     fetch('/upload',{
         method:'POST',
         body:form
-    }).then(()=>{
+    })
+    .then(res => res.json())
+    .then(response => {
+
+        if(response.status === "error"){
+            alert("⚠️ " + response.message);
+            return;
+        }
+
         setTimeout(()=>{
             fetch('/results')
             .then(res=>res.json())
@@ -230,27 +206,12 @@ function upload(){
                     document.getElementById("emotion").innerText = p.emotion || "--";
                     document.getElementById("confidence").innerText = p.confidence + "%";
                     document.getElementById("advice").innerText = p.advice || "--";
+                    document.getElementById("reason").innerText = p.reason || "--";
                 }
             });
         }, 500);
     });
 }
-
-// HISTORY
-/*
-setInterval(()=>{
-fetch('/history')
-.then(res=>res.json())
-.then(data=>{
-let html="";
-data.slice(-10).forEach(i=>{
-html+=`<p>${i.gender} ${i.age} (${i.emotion})</p>`;
-});
-document.getElementById("history").innerHTML=html;
-});
-},2000);
-*/
-
 
 </script>
 
